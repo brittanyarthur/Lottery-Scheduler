@@ -9,6 +9,8 @@
  */
 #include "sched.h"
 #include "schedproc.h"
+#include <time.h>
+#include <stdlib.h>
 #include <assert.h>
 #include <minix/com.h>
 #include <machine/archtypes.h>
@@ -207,7 +209,10 @@ int do_start_scheduling(message *m_ptr)
 				&parent_nr_n)) != OK)
 			return rv;
 
-		rmp->priority = schedproc[parent_nr_n].priority;
+		/*set prio to max_user_q instead of parent*/
+		rmp->priority = MAX_USER_Q;
+		/*set tickets to default */
+		rmp->tickets = 5;
 		rmp->time_slice = schedproc[parent_nr_n].time_slice;
 		break;
 		
@@ -248,9 +253,44 @@ int do_start_scheduling(message *m_ptr)
 
 	m_ptr->m_sched_lsys_scheduling_start.scheduler = SCHED_PROC_NR;
 
-	return OK;
+	rv = do_lot();
+	return rv;
 }
 
+
+int do_lot(){
+	int i;
+	int system_tickets = 0;
+	int random_ticket;
+	int rv;
+	/*find total system tickets*/
+	for(i =0; i < NR_PROCS; i++){
+		if(&schedproc[i]->priority == MIN_USER_Q){
+			system_tickets += &schedproc[i]->tickets;
+		}
+	}
+	srand(time(NULL));
+	random_ticket = rand(1,system_tickets);
+	random_ticket = random_ticket % system_tickets +1;
+
+	/*find winning process*/
+	for(i =0; i < NR_PROCS; i++){
+		if(&schedproc[i]->priority == MIN_USER_Q){
+			if((random_ticket - &schedproc[i]->tickets) <= 0){
+				/*winner*/
+				&schedproc[i]->priority = MAX_USER_Q;
+				if(rv = schedule_process(&schedproc[i]) != OK{
+					return;
+				}
+				break;
+			}else{
+				random_ticket -= &schedproc[i]->tickets;
+			}
+		}
+
+	}
+	return OK;
+}
 /*===========================================================================*
  *				do_nice					     *
  *===========================================================================*/
