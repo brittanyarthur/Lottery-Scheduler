@@ -1,0 +1,13 @@
+Partners: Jason Heron, Brittany Arthur
+Submitter: Jason Heron
+
+In order to compile our code, just type "make"
+In order to use, just type the command!
+
+Notes: We have infinite pipes!
+
+Try out: ls | grep ".c" | wc
+this counts all c files in the current directory.
+
+
+Hope your grading is going well.
